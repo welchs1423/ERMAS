@@ -50,6 +50,7 @@ public class GameStatsService {
                 .solo(calculateStats("솔로큐",  soloGames))
                 .duo(calculateStats("듀오큐",   duoGames))
                 .squad(calculateStats("스쿼드큐", squadGames))
+                .games(games)
                 .build();
     }
 

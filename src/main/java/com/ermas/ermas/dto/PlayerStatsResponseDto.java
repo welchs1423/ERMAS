@@ -3,6 +3,8 @@ package com.ermas.ermas.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
  * 클라이언트에 반환할 최종 응답 DTO.
  * 전체 및 큐 유형별 통계를 모두 포함한다.
@@ -24,4 +26,7 @@ public class PlayerStatsResponseDto {
 
     // 스쿼드큐 통계 (premadeCount == 3)
     private QueueStatsDto squad;
+
+    // 매치 히스토리 목록 (프론트엔드 렌더링용)
+    private List<UserGameDto> games;
 }

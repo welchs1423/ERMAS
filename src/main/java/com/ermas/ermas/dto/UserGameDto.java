@@ -25,6 +25,12 @@ public class UserGameDto {
     // 시즌 ID
     private int seasonId;
 
+    // 매칭 모드 (2: 일반, 3: 랭크)
+    private int matchingMode;
+
+    // 팀 모드 (1: 솔로, 2: 듀오, 3: 스쿼드)
+    private int matchingTeamMode;
+
     // 팀 구성원 수 (1: 솔로, 2: 듀오, 3: 스쿼드)
     private int premadeCount;
 
