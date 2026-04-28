@@ -12,44 +12,20 @@
 | Backend | Java 17, Spring Boot 3.3, Spring WebFlux (WebClient) |
 | Database | PostgreSQL, Redis (향후 연동 예정) |
 | Frontend | React 18, Tailwind CSS 3, Vite |
-| Build | Maven |
+| Build | Gradle |
 | Test | JUnit 5, AssertJ, MockWebServer (OkHttp) |
 
 ---
 
 ## API 연동 및 보안 설정
 
-### 환경 변수 설정 (필수)
+### 환경 변수 설정
 
-API 키를 코드나 Git에 절대 포함하지 않습니다. 실행 전 반드시 환경 변수를 설정하세요.
-
-**Linux / macOS (bash/zsh)**
-```bash
-export ER_API_KEY=your_api_key_here
-mvn spring-boot:run
-```
-
-**Windows PowerShell**
-```powershell
-$env:ER_API_KEY = "your_api_key_here"
-mvn spring-boot:run
-```
-
-**IntelliJ IDEA**
-- `Run > Edit Configurations > Environment variables`에 `ER_API_KEY=your_key`를 추가합니다.
-
-### .env 파일 방식 (선택)
-
-로컬 개발 편의를 위해 `.env` 파일을 생성하고 쉘 실행 시 읽어들일 수 있습니다.
+프로젝트 루트에 `.env` 파일을 생성하고 API 키를 작성합니다. `spring-dotenv` 라이브러리가 앱 구동 시 자동으로 읽어들이므로 OS 환경 변수를 별도로 주입할 필요가 없습니다.
 
 ```bash
 # .env (절대 Git에 커밋하지 마세요)
-ER_API_KEY=your_api_key_here
-```
-
-```bash
-# bash: .env 파일에서 환경 변수 로드 후 실행
-export $(cat .env | xargs) && mvn spring-boot:run
+ER_API_KEY=발급받은_키
 ```
 
 `.gitignore`에 `.env`와 `.env.*`가 등록되어 있으므로 실수로 커밋되지 않습니다.
@@ -177,7 +153,6 @@ ERMAS/
 ### 사전 요구사항
 
 - JDK 17 이상
-- Maven 3.8 이상
 - Node.js 18 이상
 - 이터널 리턴 공식 API 키 ([발급 페이지](https://developer.bser.io))
 
@@ -187,9 +162,11 @@ ERMAS/
 git clone https://github.com/welchs1423/ERMAS.git
 cd ERMAS
 
-# API 키 환경 변수 설정 후 실행
-export ER_API_KEY=your_api_key_here
-mvn spring-boot:run
+# 1. 프로젝트 루트에 .env 파일 생성
+echo "ER_API_KEY=발급받은_키" > .env
+
+# 2. 서버 실행
+./gradlew bootRun
 ```
 
 API 확인:
@@ -200,7 +177,7 @@ GET http://localhost:8080/api/stats/{닉네임}
 ### 테스트 실행
 
 ```bash
-mvn test
+./gradlew test
 ```
 
 MockWebServer를 사용하므로 실제 API 키 없이도 테스트가 실행됩니다.

@@ -14,8 +14,6 @@ server:
 
 er:
   api:
-    # 실행 전 환경 변수 ER_API_KEY를 반드시 설정해야 합니다.
-    # 설정 방법: export ER_API_KEY=your_key_here (Linux/Mac)
-    #           $env:ER_API_KEY="your_key_here"  (PowerShell)
+    # 프로젝트 루트의 .env 파일에 ER_API_KEY=발급받은_키 를 작성하면 자동으로 주입됩니다.
     key: ${ER_API_KEY}
     base-url: https://open-api.bser.io

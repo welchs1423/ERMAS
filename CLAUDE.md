@@ -10,21 +10,21 @@ ERMAS (Eternal Return Multiplayer Analytics System) is a Spring Boot backend tha
 
 ```bash
 # Run development server (port 8080)
-mvn spring-boot:run
+./gradlew bootRun
 
 # Run all tests
-mvn test
+./gradlew test
 
 # Build executable JAR
-mvn clean package
+./gradlew clean build
 
 # Run single test class
-mvn test -Dtest=GameStatsServiceTest
+./gradlew test --tests "com.ermas.ermas.GameStatsServiceTest"
 ```
 
 ## Architecture
 
-**Stack**: Java 17, Spring Boot 3.3.0, Maven, JUnit 5 + AssertJ, Lombok
+**Stack**: Java 17, Spring Boot 3.3.0, Gradle, JUnit 5 + AssertJ, Lombok, spring-dotenv
 
 **Layer structure** (standard Spring MVC):
 ```
@@ -48,7 +48,7 @@ Controller → Service → DTO ← (ClassPathResource: dummy_games.json)
 
 ## Current State & Roadmap
 
-**Mock phase**: `dummy_games.json` (21 hardcoded games) is the only data source. PostgreSQL and Redis dependencies are already in `pom.xml` but their Spring auto-configurations are **explicitly excluded** in `application.properties` so the app starts without a running DB or Redis.
+**API integration complete**: Real Eternal Return official API calls via WebClient. PostgreSQL and Redis dependencies are already in `build.gradle` but their Spring auto-configurations are **explicitly excluded** in `application.yml` so the app starts without a running DB or Redis. `.env` file at project root is loaded automatically via `spring-dotenv`.
 
 **Planned next steps** (per README):
 1. Replace `dummy_games.json` with Eternal Return official API calls via `WebClient`
