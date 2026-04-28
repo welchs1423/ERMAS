@@ -1,41 +1,41 @@
 package com.ermas.ermas.controller;
 
 import com.ermas.ermas.dto.PlayerStatsResponseDto;
-import com.ermas.ermas.service.GameStatsService;
+import com.ermas.ermas.dto.UserGameDto;
+import com.ermas.ermas.service.ErApiService;
+import com.ermas.ermas.service.StatsAnalyzeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.util.List;
 
 /**
  * 게임 통계 조회 REST 컨트롤러.
- *
- * Mock 단계에서는 단일 엔드포인트로 dummy_games.json 기반 통계를 반환한다.
- * 실제 API 연동 후에는 @PathVariable로 닉네임을 받아 조회하도록 확장한다.
+ * ErApiService로 실제 데이터를 가져온 뒤 StatsAnalyzeService에서 통계를 계산한다.
  */
 @RestController
 @RequestMapping("/api/stats")
 public class GameStatsController {
 
-    private final GameStatsService gameStatsService;
+    private final ErApiService erApiService;
+    private final StatsAnalyzeService statsAnalyzeService;
 
-    public GameStatsController(GameStatsService gameStatsService) {
-        this.gameStatsService = gameStatsService;
+    public GameStatsController(ErApiService erApiService, StatsAnalyzeService statsAnalyzeService) {
+        this.erApiService = erApiService;
+        this.statsAnalyzeService = statsAnalyzeService;
     }
 
     /**
-     * GET /api/stats
-     * 전체 및 큐 유형별(솔로/듀오/스쿼드) 통계를 반환한다.
-     *
-     * 추후 확장 예시:
-     * @GetMapping("/{nickname}")
-     * public ResponseEntity<PlayerStatsResponseDto> getStats(@PathVariable String nickname) throws IOException
+     * GET /api/stats/{nickname}
+     * 닉네임으로 유저 번호를 조회한 뒤 게임 기록을 가져와 큐 유형별 통계를 반환한다.
      */
-    @GetMapping
-    public ResponseEntity<PlayerStatsResponseDto> getStats() throws IOException {
-        PlayerStatsResponseDto response = gameStatsService.getPlayerStats();
-        return ResponseEntity.ok(response);
+    @GetMapping("/{nickname}")
+    public ResponseEntity<PlayerStatsResponseDto> getStats(@PathVariable String nickname) {
+        long userNum = erApiService.getUserNum(nickname);
+        List<UserGameDto> games = erApiService.getUserGames(userNum);
+        return ResponseEntity.ok(statsAnalyzeService.analyze(nickname, games));
     }
 }

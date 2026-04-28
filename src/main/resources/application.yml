@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: ermas
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+server:
+  port: 8080
+
+er:
+  api:
+    # 실행 전 환경 변수 ER_API_KEY를 반드시 설정해야 합니다.
+    # 설정 방법: export ER_API_KEY=your_key_here (Linux/Mac)
+    #           $env:ER_API_KEY="your_key_here"  (PowerShell)
+    key: ${ER_API_KEY}
+    base-url: https://open-api.bser.io

@@ -9,10 +9,51 @@
 
 | 구분 | 기술 |
 |------|------|
-| Backend | Java 17, Spring Boot 3.3, Spring Data JPA |
-| Database | PostgreSQL, Redis (현재 Mock 단계로 비활성) |
+| Backend | Java 17, Spring Boot 3.3, Spring WebFlux (WebClient) |
+| Database | PostgreSQL, Redis (향후 연동 예정) |
 | Frontend | React 18, Tailwind CSS 3, Vite |
 | Build | Maven |
+| Test | JUnit 5, AssertJ, MockWebServer (OkHttp) |
+
+---
+
+## API 연동 및 보안 설정
+
+### 환경 변수 설정 (필수)
+
+API 키를 코드나 Git에 절대 포함하지 않습니다. 실행 전 반드시 환경 변수를 설정하세요.
+
+**Linux / macOS (bash/zsh)**
+```bash
+export ER_API_KEY=your_api_key_here
+mvn spring-boot:run
+```
+
+**Windows PowerShell**
+```powershell
+$env:ER_API_KEY = "your_api_key_here"
+mvn spring-boot:run
+```
+
+**IntelliJ IDEA**
+- `Run > Edit Configurations > Environment variables`에 `ER_API_KEY=your_key`를 추가합니다.
+
+### .env 파일 방식 (선택)
+
+로컬 개발 편의를 위해 `.env` 파일을 생성하고 쉘 실행 시 읽어들일 수 있습니다.
+
+```bash
+# .env (절대 Git에 커밋하지 마세요)
+ER_API_KEY=your_api_key_here
+```
+
+```bash
+# bash: .env 파일에서 환경 변수 로드 후 실행
+export $(cat .env | xargs) && mvn spring-boot:run
+```
+
+`.gitignore`에 `.env`와 `.env.*`가 등록되어 있으므로 실수로 커밋되지 않습니다.
+`.env.example` 파일만 Git에 커밋하여 팀원에게 필요한 변수 목록을 공유하세요.
 
 ---
 
@@ -20,41 +61,45 @@
 
 ```
 ERMAS/
-├── frontend/                          # React 프론트엔드
+├── .env.example                          # 환경 변수 템플릿 (커밋 가능)
+├── frontend/                             # React 프론트엔드
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js                 # /api 프록시 설정
+│   ├── vite.config.js                    # /api 프록시 설정
 │   ├── tailwind.config.js
 │   └── src/
-│       ├── App.jsx                    # 탭 상태 관리 및 레이아웃
+│       ├── App.jsx                       # 검색 화면 + 탭 상태 관리
 │       ├── hooks/
-│       │   └── usePlayerStats.js      # API 호출 커스텀 훅
+│       │   └── usePlayerStats.js         # 닉네임 기반 API 호출 훅
 │       └── components/
-│           ├── ProfileHeader.jsx      # 상단 프로필 헤더
-│           ├── QueueStatsSidebar.jsx  # 큐 탭 + 승률 차트 + 통계
-│           ├── MatchHistoryList.jsx   # 매치 기록 목록
-│           └── MatchCard.jsx         # 단일 매치 카드
+│           ├── ProfileHeader.jsx         # 상단 헤더 + 닉네임 검색
+│           ├── QueueStatsSidebar.jsx     # 큐 탭 + 승률 차트 + 통계
+│           ├── MatchHistoryList.jsx      # 매치 기록 목록
+│           └── MatchCard.jsx            # 단일 매치 카드
 └── src/
     ├── main/
     │   ├── java/com/ermas/ermas/
     │   │   ├── ErmasApplication.java
     │   │   ├── config/
-    │   │   │   └── CorsConfig.java           # CORS 허용 설정
+    │   │   │   └── CorsConfig.java               # CORS 허용 설정
     │   │   ├── controller/
-    │   │   │   └── GameStatsController.java  # REST 엔드포인트
+    │   │   │   └── GameStatsController.java       # GET /api/stats/{nickname}
     │   │   ├── service/
-    │   │   │   └── GameStatsService.java     # 통계 계산 로직
+    │   │   │   ├── ErApiService.java              # WebClient 기반 ER API 호출
+    │   │   │   └── StatsAnalyzeService.java       # 큐 유형별 통계 계산
     │   │   └── dto/
-    │   │       ├── UserGameDto.java           # 단일 게임 기록
-    │   │       ├── UserGamesResponseDto.java  # API 응답 최상위 래퍼
-    │   │       ├── QueueStatsDto.java         # 큐 유형별 집계 결과
-    │   │       └── PlayerStatsResponseDto.java # 최종 클라이언트 응답
+    │   │       ├── UserGameDto.java               # 단일 게임 기록
+    │   │       ├── UserGamesResponseDto.java      # /v1/user/games 응답 래퍼
+    │   │       ├── UserInfoResponseDto.java       # /v1/user 응답 래퍼
+    │   │       ├── QueueStatsDto.java             # 큐 유형별 집계 결과
+    │   │       └── PlayerStatsResponseDto.java    # 최종 클라이언트 응답
     │   └── resources/
-    │       ├── application.properties
-    │       └── dummy_games.json              # Mock 데이터 (21게임)
+    │       ├── application.yml                    # 서버 설정 + API 환경 변수 참조
+    │       └── dummy_games.json                   # 테스트용 Mock 데이터 (21게임)
     └── test/
         └── java/com/ermas/ermas/
-            └── GameStatsServiceTest.java
+            ├── GameStatsServiceTest.java          # StatsAnalyzeService 단위 테스트
+            └── ErApiServiceTest.java              # MockWebServer 기반 API 테스트
 ```
 
 ---
@@ -83,22 +128,18 @@ ERMAS/
 
 ### 프론트엔드 UI
 
-닥지지(DAK.GG) 스타일의 이터널 리턴 전적 검색 화면을 구현합니다.
-
-- **상단 프로필 헤더**: 닉네임, 레벨, 전적 갱신 버튼, 시즌 선택
-- **좌측 사이드바**: 전체 / 솔로큐 / 듀오큐 / 스쿼드큐 탭 클릭 시 승률 원형 차트와 통계 즉시 갱신
-- **우측 매치 리스트**: 탭에 맞는 게임만 필터링하여 카드 형태로 표시
+- **초기 화면**: 닉네임 검색 입력창 (중앙 정렬)
+- **결과 화면**: 상단 헤더(닉네임 + 재검색), 좌측 사이드바(큐 탭 + 통계), 우측 매치 리스트
   - 1등 카드: 파란색 좌측 보더
   - 등외 카드: 회색 좌측 보더
-  - 큐 타입 뱃지, 매칭 모드(랭크/일반), 킬/도움, 딜량, 아이템 슬롯(6칸)
 
 ---
 
 ## API 명세
 
-### `GET /api/stats`
+### `GET /api/stats/{nickname}`
 
-전체 및 큐 유형별 통계와 매치 히스토리를 반환합니다.
+닉네임으로 유저를 조회하고 큐 유형별 통계와 매치 히스토리를 반환합니다.
 
 **응답 예시 (일부)**
 
@@ -107,32 +148,27 @@ ERMAS/
   "nickname": "TestPlayer",
   "total": {
     "queueType": "전체",
-    "totalGames": 21,
-    "totalWins": 10,
-    "winRate": 47.62,
-    "avgRank": 2.57,
-    "avgKills": 5.14,
-    "avgDamage": 15657.14
+    "totalGames": 50,
+    "totalWins": 21,
+    "winRate": 42.0,
+    "avgRank": 3.1,
+    "avgKills": 4.8,
+    "avgDamage": 14200.0
   },
-  "solo":  { "queueType": "솔로큐",  "totalGames": 8, "totalWins": 3, "winRate": 37.5,  ... },
-  "duo":   { "queueType": "듀오큐",  "totalGames": 7, "totalWins": 3, "winRate": 42.86, ... },
-  "squad": { "queueType": "스쿼드큐","totalGames": 6, "totalWins": 4, "winRate": 66.67, ... },
-  "games": [
-    {
-      "gameId": 9000001,
-      "premadeCount": 1,
-      "matchingMode": 3,
-      "characterNum": 10,
-      "gameRank": 1,
-      "playerKill": 7,
-      "playerAssistant": 2,
-      "damageToPlayer": 18500,
-      "startDtm": "2024-03-01T10:00:00",
-      "duration": 1350
-    }
-  ]
+  "solo":  { "queueType": "솔로큐",  "totalGames": 20, ... },
+  "duo":   { "queueType": "듀오큐",  "totalGames": 18, ... },
+  "squad": { "queueType": "스쿼드큐","totalGames": 12, ... },
+  "games": [ { "gameId": 9000001, "premadeCount": 1, ... } ]
 }
 ```
+
+**오류 응답**
+
+| 상황 | HTTP 상태 |
+|------|-----------|
+| 존재하지 않는 닉네임 | 404 Not Found |
+| API 키 오류 | 401 Unauthorized |
+| ER API 서버 오류 | 500 Internal Server Error |
 
 ---
 
@@ -143,22 +179,31 @@ ERMAS/
 - JDK 17 이상
 - Maven 3.8 이상
 - Node.js 18 이상
-
-> 현재 Mock 단계이므로 PostgreSQL, Redis 없이 실행 가능합니다.
+- 이터널 리턴 공식 API 키 ([발급 페이지](https://developer.bser.io))
 
 ### 백엔드 실행
 
 ```bash
 git clone https://github.com/welchs1423/ERMAS.git
 cd ERMAS
+
+# API 키 환경 변수 설정 후 실행
+export ER_API_KEY=your_api_key_here
 mvn spring-boot:run
 ```
 
-서버 기동 후 API 확인:
+API 확인:
+```
+GET http://localhost:8080/api/stats/{닉네임}
+```
 
+### 테스트 실행
+
+```bash
+mvn test
 ```
-http://localhost:8080/api/stats
-```
+
+MockWebServer를 사용하므로 실제 API 키 없이도 테스트가 실행됩니다.
 
 ### 프론트엔드 실행
 
@@ -168,11 +213,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 확인:
-
-```
-http://localhost:5173
-```
+브라우저에서 확인: `http://localhost:5173`
 
 > 백엔드가 먼저 실행 중이어야 합니다. Vite의 프록시 설정으로 `/api` 요청은 자동으로 `localhost:8080`으로 전달됩니다.
 
@@ -182,34 +223,8 @@ http://localhost:5173
 
 - [x] Mock JSON 기반 큐 유형별 통계 API
 - [x] React + Tailwind CSS 프론트엔드 (탭 UI, 매치 히스토리)
-- [ ] 이터널 리턴 공식 API 연동 (WebClient)
-- [ ] 닉네임 검색 파라미터 추가
+- [x] 이터널 리턴 공식 API 연동 (WebClient)
+- [x] 닉네임 검색 파라미터 추가
+- [x] API 키 환경 변수 보안 설정
 - [ ] PostgreSQL 게임 기록 저장 및 조회
 - [ ] Redis 응답 캐싱
-
----
-
-## 실제 API 연동 전환 가이드
-
-`GameStatsService.java`의 `loadUserGames()` 메서드 하나만 교체하면 됩니다.
-
-```java
-// Mock: ClassPathResource로 파일 읽기
-private List<UserGameDto> loadUserGames() throws IOException {
-    ClassPathResource resource = new ClassPathResource(MOCK_DATA_PATH);
-    try (InputStream inputStream = resource.getInputStream()) {
-        UserGamesResponseDto response = objectMapper.readValue(inputStream, UserGamesResponseDto.class);
-        return response.getUserGames();
-    }
-}
-
-// 실제 API 연동 예시 (WebClient)
-private List<UserGameDto> loadUserGames(String nickname) {
-    return webClient.get()
-            .uri("/v1/user/games/{userNum}", resolveUserNum(nickname))
-            .retrieve()
-            .bodyToMono(UserGamesResponseDto.class)
-            .map(UserGamesResponseDto::getUserGames)
-            .block();
-}
-```
