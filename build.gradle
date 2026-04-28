@@ -43,6 +43,27 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
 
+// Windows 한글 경로에서 Gradle @argfile을 JVM 런처가 CP949로 읽어 한글이 깨지는 문제 우회.
+// 실제 클래스패스를 percent-encoded file: URI로 매니페스트 JAR에 담고,
+// 테스트 JVM에는 ASCII 경로인 해당 JAR만 전달한다.
+def testManifestJar = tasks.register('generateTestManifestJar', Jar) {
+    archiveFileName = "${project.name}-test-classpath-manifest.jar"
+    // 프로젝트 경로에 한글이 있어 @argfile 인코딩 문제가 생기므로 ASCII 경로인 Gradle 유저 홈에 JAR을 둔다
+    destinationDirectory = layout.dir(provider { new File(gradle.gradleUserHomeDir, 'tmp/test-manifests') })
+    inputs.files(sourceSets.test.runtimeClasspath)
+    doFirst {
+        manifest {
+            attributes 'Class-Path': sourceSets.test.runtimeClasspath.collect {
+                it.toURI().toASCIIString()
+            }.join(' ')
+        }
+    }
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+    dependsOn testManifestJar
+    doFirst {
+        classpath = testManifestJar.get().outputs.files
+    }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Search, RefreshCw } from 'lucide-react';
 
-export default function ProfileHeader({ nickname, onSearch }) {
+export default function ProfileHeader({ nickname, onSearch, onRefresh, refreshing }) {
   const [inputValue, setInputValue] = useState('');
   const initial = nickname ? nickname.charAt(0).toUpperCase() : '?';
 
@@ -18,6 +19,7 @@ export default function ProfileHeader({ nickname, onSearch }) {
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 {initial}
               </div>
+              {/* 임의 레벨 뱃지 */}
               <div className="absolute -bottom-1 -right-1 bg-[#3b82f6] text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                 100
               </div>
@@ -28,6 +30,18 @@ export default function ProfileHeader({ nickname, onSearch }) {
               <div className="text-white text-2xl font-bold tracking-tight">
                 {nickname ?? '유저 정보 없음'}
               </div>
+              {/* 전적 갱신 버튼 */}
+              <button
+                onClick={onRefresh}
+                disabled={refreshing}
+                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-[#2a2d35] hover:bg-[#33363f] border border-[#3e4049] text-gray-300 hover:text-white text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  size={12}
+                  className={refreshing ? 'animate-spin' : ''}
+                />
+                전적 갱신
+              </button>
             </div>
           </div>
 
@@ -42,8 +56,9 @@ export default function ProfileHeader({ nickname, onSearch }) {
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm"
+                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm flex items-center gap-1.5"
               >
+                <Search size={14} />
                 검색
               </button>
             </form>

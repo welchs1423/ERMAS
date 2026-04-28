@@ -8,6 +8,13 @@ const QUEUE_BADGE_CLASS = {
 
 const MATCHING_MODE_LABEL = { 2: '일반', 3: '랭크' };
 
+// 1위: 파랑, 2~3위: 초록, 나머지: 회색
+function getRankStyle(rank) {
+  if (rank === 1) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-500' };
+  if (rank <= 3)  return { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-500' };
+  return { border: 'border-gray-300', bg: 'bg-gray-50', text: 'text-gray-400' };
+}
+
 function formatDuration(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -21,29 +28,24 @@ function formatDate(dateStr) {
 }
 
 export default function MatchCard({ game }) {
-  const isWin = game.gameRank === 1;
+  const rankStyle = getRankStyle(game.gameRank);
 
   return (
     <div
-      className={`flex items-center bg-white rounded-xl shadow-sm overflow-hidden border-l-4 transition-shadow hover:shadow-md ${
-        isWin ? 'border-blue-500' : 'border-gray-300'
-      }`}
+      className={`flex items-center bg-white rounded-xl shadow-sm overflow-hidden border-l-4 transition-shadow hover:shadow-md ${rankStyle.border}`}
     >
       {/* 순위 영역 */}
       <div
-        className={`w-16 flex-shrink-0 flex flex-col items-center justify-center self-stretch py-4 ${
-          isWin ? 'bg-blue-50' : 'bg-gray-50'
-        }`}
+        className={`w-16 flex-shrink-0 flex flex-col items-center justify-center self-stretch py-4 ${rankStyle.bg}`}
       >
-        <span
-          className={`text-2xl font-extrabold leading-none ${
-            isWin ? 'text-blue-500' : 'text-gray-500'
-          }`}
-        >
+        <span className={`text-2xl font-extrabold leading-none ${rankStyle.text}`}>
           #{game.gameRank}
         </span>
-        {isWin && (
+        {game.gameRank === 1 && (
           <span className="text-xs text-blue-400 font-semibold mt-1">우승</span>
+        )}
+        {game.gameRank >= 2 && game.gameRank <= 3 && (
+          <span className="text-xs text-green-400 font-semibold mt-1">TOP3</span>
         )}
       </div>
 
@@ -83,11 +85,7 @@ export default function MatchCard({ game }) {
       {/* 딜량 */}
       <div className="flex-shrink-0 px-5 text-center">
         <div className="text-xs text-gray-400 mb-1">딜량</div>
-        <div
-          className={`text-sm font-bold ${
-            isWin ? 'text-blue-600' : 'text-gray-600'
-          }`}
-        >
+        <div className={`text-sm font-bold ${rankStyle.text}`}>
           {game.damageToPlayer.toLocaleString()}
         </div>
       </div>

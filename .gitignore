@@ -1,3 +1,4 @@
+# Build outputs
 target/
 build/
 .gradle/
@@ -6,11 +7,24 @@ build/
 *.war
 !gradle/wrapper/gradle-wrapper.jar
 
+# Maven leftovers
+cp.txt
+META-INF/
+
+# IDE
 .idea/
 *.iml
 .vscode/
 
+# Logs
 *.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Local machine config (JDK path etc.)
+gradle.properties
 
 # API 키 등 민감한 환경 변수 파일 — 절대 커밋 금지
 .env
